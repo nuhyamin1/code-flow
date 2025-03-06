@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project Structure Visualizer</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="fullscreen-modal.css">
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
@@ -28,6 +29,7 @@
         <button id="zoom-in">+</button>
         <button id="zoom-out">-</button>
         <button id="reset-view">Reset</button>
+        <button id="fullscreen-btn" title="Fullscreen Mode"><i>⛶</i></button>
         <select id="view-type">
           <option value="tree">Tree View</option>
           <option value="force">Force Graph</option>
@@ -41,6 +43,26 @@
       <div id="details-content">
         <p>Select a node to view details</p>
       </div>
+    </div>
+  </div>
+  
+  <!-- Fullscreen Modal -->
+  <div id="fullscreen-modal" class="fullscreen-modal">
+    <div class="fullscreen-modal-header">
+      <h2 class="fullscreen-modal-title">Project Structure Visualization</h2>
+      <button id="close-fullscreen" class="fullscreen-modal-close">×</button>
+    </div>
+    <div class="fullscreen-modal-content">
+      <div class="fullscreen-controls">
+        <button id="fullscreen-zoom-in">+</button>
+        <button id="fullscreen-zoom-out">-</button>
+        <button id="fullscreen-reset-view">Reset</button>
+        <select id="fullscreen-view-type">
+          <option value="tree">Tree View</option>
+          <option value="force">Force Graph</option>
+        </select>
+      </div>
+      <div id="fullscreen-visualization" class="fullscreen-visualization"></div>
     </div>
   </div>
   
