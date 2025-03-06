@@ -223,14 +223,17 @@ document.addEventListener('DOMContentLoaded', () => {
     processNode(projectData.structure);
     
     // Add dependency links
-    projectData.dependencies.forEach(dep => {
-      links.push({
-        source: dep.source,
-        target: dep.target,
-        type: 'dependency',
-        dependencyType: dep.type // 'import' or 'require'
+    if (projectData.dependencies) {
+      projectData.dependencies.forEach(dep => {
+        links.push({
+          source: dep.source,
+          target: dep.target,
+          type: 'dependency',
+          dependencyType: dep.type,
+          importedElements: dep.importedElements
+        });
       });
-    });
+    }
     
     // Create force simulation
     const simulation = d3.forceSimulation(nodes)
@@ -249,22 +252,34 @@ document.addEventListener('DOMContentLoaded', () => {
       .data(links)
       .enter()
       .append('line')
-      .attr('class', d => d.type === 'dependency' ? 'link dependency' : 'link')
-      .attr('stroke', d => d.type === 'dependency' ? '#ff6b6b' : '#ccc')
-      .attr('stroke-dasharray', d => d.type === 'dependency' ? '5,5' : null)
+      .attr('class', d => {
+        let classes = 'link';
+        if (d.type === 'dependency') {
+          classes += ' dependency ' + d.dependencyType;
+        }
+        return classes;
+      })
+      .attr('stroke-width', d => d.type === 'dependency' ? 2 : 1)
+      .attr('stroke', d => {
+        if (d.type === 'dependency') {
+          return d.dependencyType === 'import' ? '#4a90e2' : '#ff6b6b';
+        }
+        return '#ccc';
+      })
+      .attr('stroke-dasharray', d => d.type === 'dependency' && d.dependencyType === 'require' ? '5,5' : null)
       .on('mouseover', function(event, d) {
         if (d.type === 'dependency') {
           d3.select(this).attr('stroke-width', 3);
           
-          // Show tooltip with dependency info
           tooltip.transition()
             .duration(200)
             .style('opacity', .9);
           
           const sourceFile = d.source.id ? d.source.id.split('/').pop() : d.source.split('/').pop();
           const targetFile = d.target.id ? d.target.id.split('/').pop() : d.target.split('/').pop();
+          const imports = d.importedElements && d.importedElements.length > 0 ? d.importedElements.join(', ') : 'All exports';
           
-          tooltip.html(`<strong>${sourceFile}</strong> ${d.dependencyType}s <strong>${targetFile}</strong>`)
+          tooltip.html(`<strong>${sourceFile}</strong> ${d.dependencyType}s from <strong>${targetFile}</strong><br><em>Imported:</em> ${imports}`)
             .style('left', (event.pageX + 10) + 'px')
             .style('top', (event.pageY - 28) + 'px');
         }
@@ -475,9 +490,15 @@ document.addEventListener('DOMContentLoaded', () => {
       .data(links)
       .enter()
       .append('line')
-      .attr('class', d => d.type === 'dependency' ? 'link dependency' : 'link')
-      .attr('stroke', d => d.type === 'dependency' ? '#ff6b6b' : '#ccc')
-      .attr('stroke-dasharray', d => d.type === 'dependency' ? '5,5' : null)
+      .attr('class', d => {
+        let classes = 'link';
+        if (d.type === 'dependency') {
+          classes += ' dependency ' + d.dependencyType;
+        }
+        return classes;
+      })
+      .attr('stroke', d => d.type === 'dependency' ? (d.dependencyType === 'import' ? '#4a90e2' : '#ff6b6b') : '#ccc')
+      .attr('stroke-dasharray', d => d.type === 'dependency' ? (d.dependencyType === 'import' ? null : '5,5') : null)
       .on('mouseover', function(event, d) {
         if (d.type === 'dependency') {
           d3.select(this).attr('stroke-width', 3);
@@ -487,10 +508,11 @@ document.addEventListener('DOMContentLoaded', () => {
             .duration(200)
             .style('opacity', .9);
           
-          const sourceFile = d.source.id ? d.source.id.split('/').pop() : d.source.split('/').pop();
-          const targetFile = d.target.id ? d.target.id.split('/').pop() : d.target.split('/').pop();
+          const sourceFile = d.source.id?.split('/').pop() || d.source.split('/').pop();
+          const targetFile = d.target.id?.split('/').pop() || d.target.split('/').pop();
+          const imports = d.importedElements?.join(', ') || 'All exports';
           
-          tooltip.html(`<strong>${sourceFile}</strong> ${d.dependencyType}s <strong>${targetFile}</strong>`)
+          tooltip.html(`<strong>${sourceFile}</strong> ${d.dependencyType}s from <strong>${targetFile}</strong><br><em>Imported:</em> ${imports}`)
             .style('left', (event.pageX + 10) + 'px')
             .style('top', (event.pageY - 28) + 'px');
         }
@@ -631,7 +653,8 @@ document.addEventListener('DOMContentLoaded', () => {
         details += `<p><strong>Imports:</strong></p><ul>`;
         outgoingDeps.forEach(dep => {
           const fileName = dep.target.split('/').pop();
-          details += `<li>${fileName}</li>`;
+          const imports = dep.importedElements?.join(', ') || 'All exports';
+          details += `<li>${fileName} (${imports})</li>`;
         });
         details += `</ul>`;
       }

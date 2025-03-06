@@ -68,14 +68,21 @@ function analyzeDependencies(tree) {
       ast.body.forEach(node => {
         if (node.type === 'ImportDeclaration') {
           const importPath = node.source.value;
-          if (!importPath.startsWith('.')) return; // Skip external modules
+          if (!importPath.startsWith('.')) return;
           
           const resolvedPath = resolveImportPath(filePath, importPath);
           if (jsFiles.includes(resolvedPath)) {
+            const imports = node.specifiers.map(specifier => {
+              return specifier.type === 'ImportNamespaceSpecifier' 
+                ? '*'
+                : specifier.imported.name;
+            });
+            
             dependencies.push({
               source: filePath,
               target: resolvedPath,
-              type: 'import'
+              type: 'import',
+              importedElements: imports
             });
           }
         } else if (node.type === 'VariableDeclaration') {
@@ -85,14 +92,21 @@ function analyzeDependencies(tree) {
               const args = decl.init.arguments;
               if (args.length > 0 && args[0].type === 'Literal') {
                 const importPath = args[0].value;
-                if (!importPath.startsWith('.')) return; // Skip external modules
+                if (!importPath.startsWith('.')) return;
                 
                 const resolvedPath = resolveImportPath(filePath, importPath);
                 if (jsFiles.includes(resolvedPath)) {
+                  let imports = [];
+                  if (decl.id && decl.id.type === 'ObjectPattern') {
+                    imports = decl.id.properties
+                      .map(prop => prop.key.name);
+                  }
+                  
                   dependencies.push({
                     source: filePath,
                     target: resolvedPath,
-                    type: 'require'
+                    type: 'require',
+                    importedElements: imports
                   });
                 }
               }

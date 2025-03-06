@@ -137,24 +137,50 @@ input[type="text"] {
 .node text {
   font-size: 12px;
 }
-
 .link {
   fill: none;
   stroke: #ccc;
   stroke-width: 1.5px;
 }
-
 .link.dependency {
+  stroke-width: 2px;
+}
+
+.link.dependency.import {
+  stroke: #4a90e2;
+  stroke-width: 2px;
+  stroke-dasharray: none;
+}
+
+.link.dependency.require {
   stroke: #ff6b6b;
   stroke-width: 2px;
   stroke-dasharray: 5,5;
 }
-
-.link.dependency:hover {
+.link.dependency.import:hover {
+  stroke: #1565c0;
+  stroke-width: 3px;
+}
+.link.dependency.require:hover {
   stroke: #ff0000;
   stroke-width: 3px;
 }
-
+.tooltip {
+  position: absolute;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  pointer-events: none;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  max-width: 300px;
+  z-index: 1000;
+}
+.tooltip em {
+  color: #666;
+  font-style: italic;
+}
 .node.selected circle {
   fill: #ffcc00;
   stroke: #ff8800;
