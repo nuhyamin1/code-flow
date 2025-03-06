@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Structure Visualizer</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Project Structure Visualizer</h1>
+    </header>
+    
+    <div class="input-section">
+      <form id="project-form">
+        <div class="form-group">
+          <label for="project-path">Project Path:</label>
+          <input type="text" id="project-path" placeholder="Enter absolute path to your project" required>
+        </div>
+        <button type="submit" class="btn">Analyze Project</button>
+      </form>
+    </div>
+    
+    <div class="visualization-container">
+      <div class="controls">
+        <button id="zoom-in">+</button>
+        <button id="zoom-out">-</button>
+        <button id="reset-view">Reset</button>
+        <select id="view-type">
+          <option value="tree">Tree View</option>
+          <option value="force">Force Graph</option>
+        </select>
+      </div>
+      <div id="visualization"></div>
+    </div>
+    
+    <div class="details-panel">
+      <h3>Details</h3>
+      <div id="details-content">
+        <p>Select a node to view details</p>
+      </div>
+    </div>
+  </div>
+  
+  <script src="app.js"></script>
+</body>
+</html>
