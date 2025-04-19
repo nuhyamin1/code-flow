@@ -4,6 +4,7 @@ const path = require('path');
 const dirTree = require('directory-tree');
 const fs = require('fs');
 const esprima = require('esprima');
+const { exec } = require('child_process'); // Added for executing commands
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,8 +27,11 @@ app.post('/api/project-structure', (req, res) => {
       return res.status(400).json({ error: 'Project path is required' });
     }
     
-    // Generate directory tree
-    const filteredTree = dirTree(projectPath, { exclude: /node_modules|.git/ });
+    // Generate directory tree, requesting type, size, and extension attributes
+    const filteredTree = dirTree(projectPath, { 
+      exclude: /node_modules|.git/,
+      attributes: ['type', 'size', 'extension'] // Request necessary attributes
+    });
     
     // Analyze dependencies
     const dependencies = analyzeDependencies(filteredTree);
@@ -41,6 +45,46 @@ app.post('/api/project-structure', (req, res) => {
     res.status(500).json({ error: 'Failed to analyze project structure' });
   }
 });
+
+// API endpoint to open a file in VS Code
+app.post('/api/open-file', (req, res) => {
+  const { filePath } = req.body;
+
+  if (!filePath) {
+    console.error('File path is missing in the request body.');
+    return res.status(400).json({ error: 'File path is required' });
+  }
+
+  // Basic validation: Check if the path seems plausible (optional, adjust as needed)
+  // For security, ensure the path is absolute or resolve it securely if relative paths are expected.
+  // Here, we assume the path provided by the frontend is the absolute path obtained from dirTree.
+  if (!path.isAbsolute(filePath)) {
+     // If paths are relative to the analyzed project, resolve them first.
+     // This example assumes absolute paths are sent from the frontend.
+     // If not, you'd need the original projectPath context here.
+     console.warn(`Received non-absolute path: ${filePath}. Attempting to open anyway.`);
+     // return res.status(400).json({ error: 'Invalid file path provided. Absolute path expected.' });
+  }
+
+  // Construct the command to open the file in VS Code
+  // Using quotes around filePath handles paths with spaces
+  const command = `code "${filePath}"`;
+
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing command "${command}": ${error.message}`); // Log error message
+      console.error(`stderr: ${stderr}`);
+      // Check if the error is because 'code' command is not found
+      if (error.message.includes('is not recognized') || error.message.includes('command not found')) {
+         return res.status(500).json({ error: `Failed to open file. Make sure the 'code' command is available in your system's PATH.` });
+      }
+      return res.status(500).json({ error: `Failed to open file: ${error.message}` });
+    }
+    // Removed success log
+    res.status(200).json({ message: 'File open request sent successfully' });
+  });
+});
+
 
 // Function to analyze dependencies between files
 function analyzeDependencies(tree) {

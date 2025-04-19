@@ -615,13 +615,44 @@ document.addEventListener('DOMContentLoaded', () => {
         .scale(scale));
   }
   
-  // Show details for the selected node
+  // Show details for the selected node and open file in VS Code if applicable
   function showNodeDetails(node) {
-    // Highlight the selected node
-    svg.selectAll('.node').classed('selected', false);
-    svg.selectAll('.node').filter(d => d.path === node.path || d.id === node.path)
-      .classed('selected', true);
+    // Highlight the selected node in the main view
+    if (svg) {
+      svg.selectAll('.node').classed('selected', false);
+      svg.selectAll('.node').filter(d => (d.data && d.data.path === node.path) || d.path === node.path || d.id === node.path)
+        .classed('selected', true);
+    }
+    // Highlight the selected node in the fullscreen view
+    if (fullscreenSvg) {
+      fullscreenSvg.selectAll('.node').classed('selected', false);
+      fullscreenSvg.selectAll('.node').filter(d => (d.data && d.data.path === node.path) || d.path === node.path || d.id === node.path)
+        .classed('selected', true);
+    }
     
+    // Open file in VS Code if it's a file node
+    if (node.type === 'file' && node.path) {
+      fetch('/api/open-file', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ filePath: node.path }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          response.text().then(text => { // Log error body if possible
+             console.error('Failed to open file:', response.statusText, 'Details:', text);
+          });
+        }
+        // Removed success log
+      })
+      .catch(error => {
+        console.error('Error sending open file request:', error);
+      });
+    }
+    // Removed condition failed log
+
     // Display node details
     let details = `<h4>${node.name}</h4>`;
     details += `<p><strong>Type:</strong> ${node.type}</p>`;
